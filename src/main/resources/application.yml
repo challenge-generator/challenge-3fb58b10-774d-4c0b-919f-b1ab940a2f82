@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: ordenes-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ordenes_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 2000
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - org.springframework.web.client.ResourceAccessException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+    instances:
+      inventarioService:
+        baseConfig: default
+        failureRateThreshold: 30
+        waitDurationInOpenState: 3s
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 2s
+    instances:
+      inventarioService:
+        baseConfig: default
+
+inventario:
+  service:
+    url: http://localhost:8081/api/inventario
+    timeout: 2000
+    max-retries: 3
+
+logging:
+  level:
+    com.pragma.ordenes: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+    io.github.resilience4j: DEBUG
