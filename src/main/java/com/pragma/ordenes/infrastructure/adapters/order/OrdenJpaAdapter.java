@@ -71,24 +71,4 @@ public class OrdenJpaAdapter implements OrdenRepositoryPort {
                 .map(ordenMapper::toDomain)
                 .collect(Collectors.toList());
     }
-
-    @Override
-    public Orden actualizarEstado(UUID id, Orden.EstadoOrden nuevoEstado) {
-        log.info("Actualizando estado de orden {} a {}", id, nuevoEstado);
-        
-        Optional<OrdenEntity> entityOpt = ordenRepository.findById(id);
-        if (entityOpt.isEmpty()) {
-            log.error("Orden no encontrada para actualización: {}", id);
-            throw new IllegalArgumentException("Orden no encontrada con ID: " + id);
-        }
-        
-        OrdenEntity entity = entityOpt.get();
-        entity.setEstado(nuevoEstado);
-        entity.setFechaActualizacion(LocalDateTime.now());
-        
-        OrdenEntity savedEntity = ordenRepository.save(entity);
-        log.info("Estado de orden actualizado exitosamente");
-        
-        return ordenMapper.toDomain(savedEntity);
-    }
 }

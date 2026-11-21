@@ -37,12 +37,4 @@ public interface OrdenRepositoryPort {
      * @return Lista de órdenes con el estado dado
      */
     List<Orden> buscarPorEstado(Orden.EstadoOrden estado);
-
-    /**
-     * Actualiza el estado de una orden existente.
-     * @param id ID de la orden
-     * @param nuevoEstado Nuevo estado
-     * @return Orden actualizada
-     */
-    Orden actualizarEstado(UUID id, Orden.EstadoOrden nuevoEstado);
 }

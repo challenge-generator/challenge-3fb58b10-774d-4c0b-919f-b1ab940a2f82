@@ -2,7 +2,6 @@ package com.pragma.ordenes.domain.ports;
 
 import com.pragma.ordenes.domain.model.Orden;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Puerto que define la interfaz para interactuar con el servicio externo de inventario.
@@ -30,18 +29,4 @@ public interface InventarioServicePort {
      * @param items Lista de items a restaurar
      */
     void restaurarStock(List<Orden.ItemOrden> items);
-
-    /**
-     * Obtiene el precio de un producto específico del inventario externo.
-     * @param productoId Identificador del producto
-     * @return Precio del producto
-     */
-    java.math.BigDecimal obtenerPrecioProducto(UUID productoId);
-
-    /**
-     * Valida que un producto exista en el inventario.
-     * @param productoId Identificador del producto
-     * @return true si el producto existe, false en caso contrario
-     */
-    boolean validarProductoExistente(UUID productoId);
 }

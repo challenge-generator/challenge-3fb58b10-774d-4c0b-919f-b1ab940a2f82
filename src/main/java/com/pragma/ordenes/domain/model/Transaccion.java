@@ -47,15 +47,6 @@ public class Transaccion {
     private String usuarioResponsable;
 
     /**
-     * Actualiza los detalles de la transacción.
-     * @param nuevosDetalles Nuevos detalles a registrar
-     */
-    public void actualizarDetalles(String nuevosDetalles) {
-        this.detalles = nuevosDetalles;
-        this.fechaTransaccion = LocalDateTime.now();
-    }
-
-    /**
      * Crea una nueva transacción para registrar una operación.
      * @param tipoOperacion Tipo de operación realizada
      * @param entidadAfectada Entidad que fue modificada

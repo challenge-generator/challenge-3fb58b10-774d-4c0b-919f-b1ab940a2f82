@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -64,15 +63,6 @@ public class Orden {
         if (items.stream().anyMatch(item -> item.getCantidad() <= 0)) {
             throw new IllegalArgumentException("Todos los items deben tener cantidad positiva");
         }
-    }
-
-    /**
-     * Actualiza el estado de la orden y registra la fecha de actualización.
-     * @param nuevoEstado Estado al que se actualizará la orden
-     */
-    public void actualizarEstado(EstadoOrden nuevoEstado) {
-        this.estado = nuevoEstado;
-        this.fechaActualizacion = LocalDateTime.now();
     }
 
     /**

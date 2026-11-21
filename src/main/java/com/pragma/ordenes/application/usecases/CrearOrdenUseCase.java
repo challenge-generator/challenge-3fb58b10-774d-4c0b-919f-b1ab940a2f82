@@ -1,10 +1,9 @@
 package com.pragma.ordenes.application.usecases;
 
+import com.pragma.ordenes.application.exceptions.InventarioInsuficienteException;
 import com.pragma.ordenes.domain.model.Orden;
-import com.pragma.ordenes.domain.model.Transaccion;
 import com.pragma.ordenes.domain.ports.InventarioServicePort;
 import com.pragma.ordenes.domain.ports.OrdenRepositoryPort;
-import com.pragma.ordenes.domain.ports.TransaccionRepositoryPort;
 import com.pragma.ordenes.infrastructure.exceptions.InventarioServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,12 +13,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Caso de uso para la creación de órdenes.
- * Coordina la lógica de negocio y la interacción con los puertos de inventario
- * y registro de transacciones. Implementa el patrón de aplicación de casos de uso
- * manteniendo el dominio limpio de dependencias de infraestructura.
- */
 @Service
 public class CrearOrdenUseCase {
 
@@ -27,28 +20,17 @@ public class CrearOrdenUseCase {
 
     private final OrdenRepositoryPort ordenRepository;
     private final InventarioServicePort inventarioService;
-    private final TransaccionRepositoryPort transaccionRepository;
+    private final RegistarTransaccionUseCase  registarTransaccionUseCase;
 
     public CrearOrdenUseCase(
             OrdenRepositoryPort ordenRepository,
             InventarioServicePort inventarioService,
-            TransaccionRepositoryPort transaccionRepository) {
+            RegistarTransaccionUseCase registarTransaccionUseCase) {
         this.ordenRepository = ordenRepository;
         this.inventarioService = inventarioService;
-        this.transaccionRepository = transaccionRepository;
+        this.registarTransaccionUseCase = registarTransaccionUseCase;
     }
 
-    /**
-     * Ejecuta el flujo de creación de una orden.
-     * Este método orquesta todo el proceso: validación de la orden,
-     * verificación de disponibilidad en inventario, persistencia de la orden,
-     * decremento de stock y registro de transacciones para auditoría.
-     *
-     * @param orden La orden a crear
-     * @return La orden creada con su ID asignado
-     * @throws InventarioServiceException si el inventario no está disponible
-     * @throws IllegalArgumentException si la orden no es válida
-     */
     public Orden ejecutar(Orden orden) {
         logger.info("Iniciando proceso de creación de orden para cliente: {}", orden.getClienteId());
 
@@ -56,7 +38,8 @@ public class CrearOrdenUseCase {
         verificarDisponibilidadInventario(orden);
         Orden ordenGuardada = persistirOrden(orden);
         actualizarInventario(ordenGuardada);
-        registrarTransacciones(ordenGuardada);
+        registarTransaccionUseCase.registrarTransaccionOrden(orden);
+        registarTransaccionUseCase.registrarTransactionInventario(orden);
 
         logger.info("Orden {} creada exitosamente para cliente: {}",
                 ordenGuardada.getId(), ordenGuardada.getClienteId());
@@ -91,8 +74,7 @@ public class CrearOrdenUseCase {
         if (!disponible) {
             logger.error("No hay disponibilidad en inventario para la orden del cliente: {}",
                     orden.getClienteId());
-            throw new InventarioServiceException(
-                    "No todos los items solicitados están disponibles en inventario");
+            throw new InventarioInsuficienteException();
         }
 
         logger.debug("Inventario verificado: todos los items disponibles");
@@ -126,36 +108,5 @@ public class CrearOrdenUseCase {
             throw new InventarioServiceException(
                     "Error al actualizar el inventario: " + e.getMessage(), e);
         }
-    }
-
-    private void registrarTransacciones(Orden orden) {
-        logger.debug("Registrando transacciones de auditoría para orden: {}", orden.getId());
-
-        Transaccion transaccionOrden = Transaccion.crearTransaccion(
-                "CREACION",
-                "ORDEN",
-                orden.getId(),
-                String.format("Orden creada para cliente %s con %d items, total: %s",
-                        orden.getClienteId(),
-                        orden.getItems().size(),
-                        orden.calcularTotal())
-        );
-
-        transaccionRepository.guardar(transaccionOrden);
-
-        for (Orden.ItemOrden item : orden.getItems()) {
-            Transaccion transaccionInventario = Transaccion.crearTransaccion(
-                    "DECREMENTO_STOCK",
-                    "INVENTARIO",
-                    item.getProductoId(),
-                    String.format("Stock decrementado en %d unidades para orden %s",
-                            item.getCantidad(),
-                            orden.getId())
-            );
-
-            transaccionRepository.guardar(transaccionInventario);
-        }
-
-        logger.info("Transacciones de auditoría registradas para orden: {}", orden.getId());
     }
 }

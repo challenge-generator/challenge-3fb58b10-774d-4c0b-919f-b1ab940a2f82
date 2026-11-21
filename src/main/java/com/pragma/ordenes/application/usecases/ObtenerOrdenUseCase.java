@@ -21,17 +21,31 @@ public class ObtenerOrdenUseCase {
 
     public Orden buscarPorId(UUID idOrden) {
         logger.debug("Buscando Orden por id {}", idOrden);
+
+        if (idOrden == null) {
+            throw new IllegalArgumentException("El ID de la orden es obligatorio");
+        }
         return ordenRepositoryPort.buscarPorId(idOrden)
                 .get();
     }
 
     public List<Orden> buscarPorClienteId(String entidadAfectada) {
         logger.debug("Buscando Órdenes por entidad afectada {}", entidadAfectada);
+
+        if (entidadAfectada == null) {
+            throw new IllegalArgumentException("La entidad afectada es obligatoria");
+        }
+
         return ordenRepositoryPort.buscarPorClienteId(entidadAfectada);
     }
 
     public List<Orden> buscarPorEstado(Orden.EstadoOrden estado) {
         logger.debug("Buscando Órdenes por estado {}", estado);
+
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado de la orden es obligatorio");
+        }
+
         return ordenRepositoryPort.buscarPorEstado(estado);
     }
 }
