@@ -1,7 +1,5 @@
 package com.pragma.ordenes.infrastructure.controllers;
 
-
-import com.pragma.ordenes.domain.model.EstadoOrden;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pragma.ordenes.application.usecases.CrearOrdenUseCase;
 import com.pragma.ordenes.domain.model.Orden;
@@ -10,15 +8,13 @@ import com.pragma.ordenes.infrastructure.exceptions.InventarioServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -40,7 +36,7 @@ class OrdenControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private CrearOrdenUseCase crearOrdenUseCase;
 
     private Orden ordenRequest;

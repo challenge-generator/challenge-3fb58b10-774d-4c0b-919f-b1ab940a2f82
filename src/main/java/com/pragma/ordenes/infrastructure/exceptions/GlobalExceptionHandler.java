@@ -1,7 +1,7 @@
 package com.pragma.ordenes.infrastructure.exceptions;
 
-
-import com.pragma.ordenes.domain.model.Orden;
+import com.pragma.ordenes.application.exceptions.OrdenNoEncontradaException;
+import com.pragma.ordenes.application.exceptions.InventarioInsuficienteException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -79,18 +78,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
-    @ExceptionHandler(OrdenNoCancelableException.class)
-    public ResponseEntity<ErrorResponse> handleOrdenNoCancelableException(
-            OrdenNoCancelableException ex, WebRequest request) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error("Orden No Cancelable")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {

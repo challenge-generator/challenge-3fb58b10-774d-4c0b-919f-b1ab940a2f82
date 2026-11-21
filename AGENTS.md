@@ -104,14 +104,14 @@ Salieron de un analisis estatico del codigo que SI esta en el repo. Cada una rom
       El import com.pragma.ordenes.infrastructure.persistence.entity.TransaccionEntity usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
 - [ ] `src/main/java/com/pragma/ordenes/infrastructure/adapters/TransaccionJpaAdapter.java` — `com.pragma.ordenes.infrastructure.persistence.repository.TransaccionRepository`
       El import com.pragma.ordenes.infrastructure.persistence.repository.TransaccionRepository usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
-- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.adapters.dto.OrdenRequest`
-      El import com.pragma.ordenes.infrastructure.adapters.dto.OrdenRequest usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
-- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.adapters.dto.OrdenResponse`
-      El import com.pragma.ordenes.infrastructure.adapters.dto.OrdenResponse usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
-- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenRequest`
-      El import com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenRequest usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
-- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenResponse`
-      El import com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenResponse usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
+- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.controllers.dto.OrdenRequest`
+      El import com.pragma.ordenes.infrastructure.controllers.dto.OrdenRequest usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
+- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.controllers.dto.OrdenResponse`
+      El import com.pragma.ordenes.infrastructure.controllers.dto.OrdenResponse usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
+- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenRequest`
+      El import com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenRequest usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
+- [ ] `src/main/java/com/pragma/ordenes/infrastructure/controllers/OrdenController.java` — `com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenResponse`
+      El import com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenResponse usa un paquete propio del proyecto pero ningun archivo generado declara ese tipo. Falta generar la clase/interfaz, o el import esta mal escrito.
 - [ ] `src/main/java/com/pragma/ordenes/application/usecases/CrearOrdenUseCase.java` — `org.slf4j`
       El import org.slf4j.Logger pertenece a org.slf4j, pero ninguna dependencia declarada en el pom.xml cubre ese paquete. Falta agregar la dependencia o el import esta mal (libreria equivocada).
 - [ ] `src/main/java/com/pragma/ordenes/application/usecases/RegistrarTransaccionUseCase.java` — `org.slf4j`

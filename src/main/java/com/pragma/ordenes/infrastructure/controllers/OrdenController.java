@@ -1,13 +1,15 @@
 package com.pragma.ordenes.infrastructure.controllers;
 
+import com.pragma.ordenes.application.usecases.CancelarOrdenUseCase;
 import com.pragma.ordenes.application.usecases.CrearOrdenUseCase;
+import com.pragma.ordenes.application.usecases.ObtenerOrdenUseCase;
 import com.pragma.ordenes.domain.model.Orden;
 import com.pragma.ordenes.domain.model.Orden.EstadoOrden;
 import com.pragma.ordenes.domain.model.Orden.ItemOrden;
-import com.pragma.ordenes.infrastructure.adapters.dto.OrdenRequest;
-import com.pragma.ordenes.infrastructure.adapters.dto.OrdenResponse;
-import com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenRequest;
-import com.pragma.ordenes.infrastructure.adapters.dto.ItemOrdenResponse;
+import com.pragma.ordenes.infrastructure.controllers.dto.OrdenRequest;
+import com.pragma.ordenes.infrastructure.controllers.dto.OrdenResponse;
+import com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenRequest;
+import com.pragma.ordenes.infrastructure.controllers.dto.ItemOrdenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,9 +30,15 @@ import java.util.stream.Collectors;
 public class OrdenController {
 
     private final CrearOrdenUseCase crearOrdenUseCase;
+    private final ObtenerOrdenUseCase obtenerOrdenUseCase;
+    private final CancelarOrdenUseCase cancelarOrdenUseCase;
 
-    public OrdenController(CrearOrdenUseCase crearOrdenUseCase) {
+    public OrdenController(CrearOrdenUseCase crearOrdenUseCase,
+                           ObtenerOrdenUseCase obtenerOrdenUseCase,
+                           CancelarOrdenUseCase cancelarOrdenUseCase) {
         this.crearOrdenUseCase = crearOrdenUseCase;
+        this.obtenerOrdenUseCase = obtenerOrdenUseCase;
+        this.cancelarOrdenUseCase = cancelarOrdenUseCase;
     }
 
     @PostMapping
@@ -55,7 +63,7 @@ public class OrdenController {
     })
     public ResponseEntity<OrdenResponse> obtenerOrdenPorId(
             @Parameter(description = "ID de la orden", required = true) @PathVariable UUID id) {
-        Orden orden = crearOrdenUseCase.buscarPorId(id);
+        Orden orden = obtenerOrdenUseCase.buscarPorId(id);
         if (orden == null) {
             return ResponseEntity.notFound().build();
         }
@@ -69,7 +77,7 @@ public class OrdenController {
     })
     public ResponseEntity<List<OrdenResponse>> listarOrdenesPorCliente(
             @Parameter(description = "ID del cliente", required = true) @RequestParam String clienteId) {
-        List<Orden> ordenes = crearOrdenUseCase.buscarPorClienteId(clienteId);
+        List<Orden> ordenes = obtenerOrdenUseCase.buscarPorClienteId(clienteId);
         List<OrdenResponse> responses = ordenes.stream()
                 .map(this::mapDomainToResponse)
                 .collect(Collectors.toList());
@@ -83,7 +91,7 @@ public class OrdenController {
     })
     public ResponseEntity<List<OrdenResponse>> listarOrdenesPorEstado(
             @Parameter(description = "Estado de la orden", required = true) @PathVariable EstadoOrden estado) {
-        List<Orden> ordenes = crearOrdenUseCase.buscarPorEstado(estado);
+        List<Orden> ordenes = obtenerOrdenUseCase.buscarPorEstado(estado);
         List<OrdenResponse> responses = ordenes.stream()
                 .map(this::mapDomainToResponse)
                 .collect(Collectors.toList());
@@ -99,7 +107,7 @@ public class OrdenController {
     })
     public ResponseEntity<OrdenResponse> cancelarOrden(
             @Parameter(description = "ID de la orden", required = true) @PathVariable UUID id) {
-        Orden ordenCancelada = crearOrdenUseCase.cancelarOrden(id);
+        Orden ordenCancelada = cancelarOrdenUseCase.cancelarOrden(id);
         if (ordenCancelada == null) {
             return ResponseEntity.notFound().build();
         }
@@ -147,7 +155,6 @@ public class OrdenController {
                 .productoId(item.getProductoId())
                 .cantidad(item.getCantidad())
                 .precioUnitario(item.getPrecioUnitario().toString())
-                .subtotal(item.getSubtotal().toString())
                 .build();
     }
 }

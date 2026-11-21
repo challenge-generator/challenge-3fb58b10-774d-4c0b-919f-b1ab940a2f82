@@ -1,7 +1,5 @@
 package com.pragma.ordenes.domain.ports;
 
-
-import com.pragma.ordenes.domain.model.EstadoOrden;
 import com.pragma.ordenes.domain.model.Orden;
 import java.util.List;
 import java.util.Optional;
@@ -39,12 +37,4 @@ public interface OrdenRepositoryPort {
      * @return Lista de órdenes con el estado dado
      */
     List<Orden> buscarPorEstado(Orden.EstadoOrden estado);
-
-    /**
-     * Actualiza el estado de una orden existente.
-     * @param id ID de la orden
-     * @param nuevoEstado Nuevo estado
-     * @return Orden actualizada
-     */
-    Orden actualizarEstado(UUID id, Orden.EstadoOrden nuevoEstado);
 }

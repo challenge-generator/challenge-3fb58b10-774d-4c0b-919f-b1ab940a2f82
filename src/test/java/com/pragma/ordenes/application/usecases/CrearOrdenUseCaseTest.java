@@ -1,28 +1,25 @@
 package com.pragma.ordenes.application.usecases;
 
-
-import com.pragma.ordenes.domain.model.EstadoOrden;
+import com.pragma.ordenes.application.exceptions.InventarioInsuficienteException;
 import com.pragma.ordenes.domain.model.Orden;
-import com.pragma.ordenes.domain.model.Transaccion;
 import com.pragma.ordenes.domain.ports.InventarioServicePort;
 import com.pragma.ordenes.domain.ports.OrdenRepositoryPort;
-import com.pragma.ordenes.domain.ports.TransaccionRepositoryPort;
 import com.pragma.ordenes.infrastructure.exceptions.InventarioServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,7 +33,7 @@ class CrearOrdenUseCaseTest {
     private InventarioServicePort inventarioService;
 
     @Mock
-    private TransaccionRepositoryPort transaccionRepository;
+    private RegistarTransaccionUseCase registarTransaccionUseCase;
 
     @InjectMocks
     private CrearOrdenUseCase crearOrdenUseCase;
@@ -45,87 +42,84 @@ class CrearOrdenUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        ordenValida = new Orden();
-        ordenValida.setId(UUID.randomUUID());
-        ordenValida.setClienteId("cliente-123");
-        ordenValida.setItems(new ArrayList<>());
-        ordenValida.setEstado(Orden.EstadoOrden.PENDIENTE);
-        ordenValida.setFechaCreacion(LocalDateTime.now());
-        ordenValida.setFechaActualizacion(LocalDateTime.now());
+        ordenValida = Orden.builder()
+                .clienteId("cliente-123")
+                .items(List.of(Orden.ItemOrden.builder()
+                        .productoId(UUID.randomUUID())
+                        .nombreProducto("Producto")
+                        .cantidad(2)
+                        .precioUnitario(new BigDecimal("10.00"))
+                        .build()))
+                .build();
     }
 
-    @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.Disabled("Superficie de práctica: implementar según criterios del reto")
-    @DisplayName("Debe crear una orden exitosamente cuando el inventario responde correctamente")
-    void debeCrearOrdenExitosamente_CuandoInventarioResponde() {
-        // Given
-        when(inventarioService.reservarInventario(any())).thenReturn(true);
-        when(ordenRepository.guardar(any(Orden.class))).thenReturn(ordenValida);
-        when(transaccionRepository.guardar(any(Transaccion.class))).thenAnswer(i -> i.getArgument(0));
+    @Test
+    @DisplayName("Crea y persiste la orden cuando el inventario está disponible")
+    void debeCrearOrdenCuandoInventarioEstaDisponible() throws Exception {
+        when(inventarioService.verificarDisponibilidad(ordenValida.getItems())).thenReturn(true);
+        when(ordenRepository.guardar(any(Orden.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         Orden resultado = crearOrdenUseCase.ejecutar(ordenValida);
 
-        // Then
-        assertNotNull(resultado);
-        verify(ordenRepository, times(1)).guardar(any(Orden.class));
-        verify(inventarioService, times(1)).reservarInventario(any());
+        assertSame(ordenValida, resultado);
+        assertNotNull(resultado.getId());
+        assertNotNull(resultado.getFechaCreacion());
+        assertNotNull(resultado.getFechaActualizacion());
+        assertEquals(Orden.EstadoOrden.PENDIENTE, resultado.getEstado());
+        verify(ordenRepository).guardar(ordenValida);
+        verify(inventarioService).decrementarStock(ordenValida.getItems());
+        verify(registarTransaccionUseCase).registrarTransaccionOrden(ordenValida);
+        verify(registarTransaccionUseCase).registrarTransactionInventario(ordenValida);
     }
 
-    @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.Disabled("Superficie de práctica: implementar según criterios del reto")
-    @DisplayName("Debe lanzar excepción cuando el inventario no tiene disponibilidad")
-    void debeLanzarExcepcion_CuandoInventarioNoDisponible() {
-        // Given
-        when(inventarioService.reservarInventario(any())).thenReturn(false);
+    @Test
+    @DisplayName("Lanza InventarioInsuficienteException sin persistir si no hay stock")
+    void debeLanzarExcepcionCuandoInventarioNoEstaDisponible() throws Exception {
+        when(inventarioService.verificarDisponibilidad(ordenValida.getItems())).thenReturn(false);
 
-        // When & Then
-        assertThrows(InventarioServiceException.class, () -> {
-            crearOrdenUseCase.ejecutar(ordenValida);
-        });
+        assertThrows(InventarioInsuficienteException.class,
+                () -> crearOrdenUseCase.ejecutar(ordenValida));
+
         verify(ordenRepository, never()).guardar(any(Orden.class));
+        verify(inventarioService, never()).decrementarStock(anyList());
+        verifyNoInteractions(registarTransaccionUseCase);
     }
 
-    @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.Disabled("Superficie de práctica: implementar según criterios del reto")
-    @DisplayName("Debe registrar transacción al crear orden exitosamente")
-    void debeRegistrarTransaccion_CuandoOrdenCreada() {
-        // Given
-        when(inventarioService.reservarInventario(any())).thenReturn(true);
-        when(ordenRepository.guardar(any(Orden.class))).thenReturn(ordenValida);
-        when(transaccionRepository.guardar(any(Transaccion.class))).thenAnswer(i -> i.getArgument(0));
+    @Test
+    @DisplayName("Rechaza una orden sin items antes de consultar inventario")
+    void debeRechazarOrdenSinItems() throws Exception {
+        ordenValida.setItems(List.of());
 
-        // When
-        crearOrdenUseCase.ejecutar(ordenValida);
+        assertThrows(IllegalArgumentException.class,
+                () -> crearOrdenUseCase.ejecutar(ordenValida));
 
-        // Then
-        verify(transaccionRepository, times(1)).guardar(any(Transaccion.class));
+        verifyNoInteractions(inventarioService, ordenRepository, registarTransaccionUseCase);
     }
 
-    @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.Disabled("Superficie de práctica: implementar según criterios del reto")
-    @DisplayName("Debe validar que la orden tenga items antes de procesar")
-    void debeValidarItems_CuandoOrdenNoTieneItems() {
-        // Given
-        ordenValida.setItems(new ArrayList<>());
+    @Test
+    @DisplayName("Restaura el inventario y lanza excepción si falla el decremento")
+    void debeRestaurarInventarioSiFallaElDecremento() throws Exception {
+        when(inventarioService.verificarDisponibilidad(ordenValida.getItems())).thenReturn(true);
+        when(ordenRepository.guardar(any(Orden.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doThrow(new IllegalStateException("Servicio no disponible"))
+                .when(inventarioService).decrementarStock(ordenValida.getItems());
 
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            crearOrdenUseCase.ejecutar(ordenValida);
-        });
+        InventarioServiceException exception = assertThrows(InventarioServiceException.class,
+                () -> crearOrdenUseCase.ejecutar(ordenValida));
+
+        assertTrue(exception.getMessage().contains("Servicio no disponible"));
+        verify(inventarioService).restaurarStock(ordenValida.getItems());
+        verifyNoInteractions(registarTransaccionUseCase);
     }
 
-    @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.Disabled("Superficie de práctica: implementar según criterios del reto")
-    @DisplayName("Debe manejar error de conexión con inventario")
-    void debeManejarErrorConexionInventario() {
-        // Given
-        when(inventarioService.reservarInventario(any()))
-                .thenThrow(new InventarioServiceException("Error de conexión con inventario"));
+    @Test
+    @DisplayName("Rechaza una orden cuyo cliente no está informado")
+    void debeRechazarOrdenSinCliente() throws Exception {
+        ordenValida.setClienteId(" ");
 
-        // When & Then
-        assertThrows(InventarioServiceException.class, () -> {
-            crearOrdenUseCase.ejecutar(ordenValida);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> crearOrdenUseCase.ejecutar(ordenValida));
+
+        verifyNoInteractions(inventarioService, ordenRepository, registarTransaccionUseCase);
     }
 }
